@@ -17,7 +17,7 @@ describe("MongoClient", () => {
     let testClient
     try {
       testClient = await MongoClient.connect(process.env.MFLIX_DB_URI, {
-        useNewUrlParser: true,
+        useNewUrlParser: true, retryWrites: true, connectTimeoutMS: 200
       })
       expect(testClient).not.toBeNull()
 

@@ -56,7 +56,9 @@ export default class MoviesDAO {
 
     let cursor
     try {
-      cursor = await movies.find({ countries: { $in: countries } }).project({ title: 1, _id: 1});
+      cursor = await movies
+        .find({ countries: { $in: countries } })
+        .project({ title: 1, _id: 1 })
     } catch (e) {
       console.error(`Unable to issue find command, ${e}`)
       return []
@@ -111,7 +113,7 @@ export default class MoviesDAO {
 
     // TODO Ticket: Text and Subfield Search
     // Construct a query that will search for the chosen genre.
-    const query = { genres: { $in: searchGenre }}
+    const query = { genres: { $in: searchGenre } }
     const project = {}
     const sort = DEFAULT_SORT
 
@@ -191,7 +193,7 @@ export default class MoviesDAO {
       sortStage,
       skipStage,
       limitStage,
-      facetStage
+      facetStage,
     ]
 
     try {
@@ -278,6 +280,7 @@ export default class MoviesDAO {
    * @returns {MflixMovie | null} Returns either a single movie or nothing
    */
   static async getMovieByID(id) {
+    console.log(id)
     try {
       /**
       Ticket: Get Comments
@@ -291,13 +294,38 @@ export default class MoviesDAO {
 
       // TODO Ticket: Get Comments
       // Implement the required pipeline.
+
       const pipeline = [
         {
           $match: {
-            _id: ObjectId(id)
-          }
-        }
+            _id: ObjectId(id),
+          },
+        },
+        {
+          $lookup: {
+            from: "comments",
+            let: {
+              id: "$_id",
+            },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $eq: ["$movie_id", "$$id"],
+                  },
+                },
+              },
+              {
+                $sort: {
+                  date: -1,
+                },
+              },
+            ],
+            as: "comments",
+          },
+        },
       ]
+
       return await movies.aggregate(pipeline).next()
     } catch (e) {
       /**

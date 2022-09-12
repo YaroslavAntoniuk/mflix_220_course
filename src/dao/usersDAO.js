@@ -29,17 +29,8 @@ export default class UsersDAO {
    * @returns {DAOResponse} Returns either a "success" or an "error" Object
    */
   static async addUser({ name, email, password }) {
-    /**
-    Ticket: Durable Writes
-
-    Please increase the durability of this method by using a non-default write
-    concern with ``insertOne``.
-    */
-
     try {
-      // TODO Ticket: Durable Writes
-      // Use a more durable Write Concern for this operation.
-      await users.insertOne({ name, email, password })
+      await users.insertOne({ name, email, password }, { w: 'majority' })
       return { success: true }
     } catch (e) {
       if (String(e).startsWith("MongoError: E11000 duplicate key error")) {
